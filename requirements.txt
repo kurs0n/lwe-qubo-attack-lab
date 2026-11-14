@@ -1,0 +1,4 @@
+numpy>=1.26,<3
+dwave-samplers>=1.8,<2
+matplotlib
+-e .
