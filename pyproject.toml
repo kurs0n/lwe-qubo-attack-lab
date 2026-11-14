@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lwe-qubo-attack-lab"
+version = "0.1.0"
+description = "Generate small LWE instances, convert them to QUBO, and solve them locally."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26,<3",
+    "dwave-samplers>=1.8,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7,<9",
+    "matplotlib>=3.8,<4",
+]
+
+[tool.setuptools.packages.find]
+include = ["lwe_qubo*"]
