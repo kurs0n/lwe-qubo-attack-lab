@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run check && vite build",
+    "check": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.worker.json && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lwe-qubo/core": "*",
     "@tailwindcss/vite": "^4.3.5",
     "clsx": "^2.1.1",
     "katex": "^0.19.1",
