@@ -1,0 +1,243 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ==========================================================================
+   LWE -> QUBO Attack Lab — Design System Tokens
+   Typography: Tech Editorial (Space Grotesk + Inter + JetBrains Mono)
+   Palette:    Quantum Teal (Light-First Editorial + Dark Lab)
+     - 90/10 neutral-to-accent ratio (calm chrome, color = data)
+     - 3-part diagram chip grammar (main / -soft fill / -border stroke)
+     - Dedicated Light & Dark calibration
+   ========================================================================== */
+
+:root {
+  /* Typography */
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --body-size: 1.05rem;
+  --body-leading: 1.72;
+
+  /* Neutral Surfaces (Light Editorial) */
+  --bg-page: #f8f9fa;
+  --bg-surface: #ffffff;
+  --bg-subtle: #eff2f5;
+  --bg-elevated: #ffffff;
+  --dot-grid: rgba(15, 23, 34, 0.09);
+
+  /* Neutral Borders */
+  --border-subtle: #e1e6ec;
+  --border-strong: #c5ced9;
+
+  /* Ink Hierarchy */
+  --ink-primary: #0f1722;
+  --ink-secondary: #425063;
+  --ink-muted: #6c7b8f;
+
+  /* Brand & Domain Semantic Tokens (3-part chip grammar) */
+  --accent-brand: #0d7a6f;
+  --accent-brand-soft: rgba(13, 122, 111, 0.11);
+  --accent-brand-border: rgba(13, 122, 111, 0.34);
+
+  --qubo-positive: #d64045;
+  --qubo-positive-soft: rgba(214, 64, 69, 0.11);
+  --qubo-positive-border: rgba(214, 64, 69, 0.36);
+
+  --qubo-negative: #0f6cbd;
+  --qubo-negative-soft: rgba(15, 108, 189, 0.11);
+  --qubo-negative-border: rgba(15, 108, 189, 0.36);
+
+  --noise-accent: #c77700;
+  --noise-soft: rgba(199, 119, 0, 0.12);
+  --noise-border: rgba(199, 119, 0, 0.38);
+
+  --optimal-accent: #15803d;
+  --optimal-soft: rgba(21, 128, 61, 0.11);
+  --optimal-border: rgba(21, 128, 61, 0.36);
+
+  /* Solver Series Accents */
+  --solver-bf: #0f1722;
+  --solver-sa: #0d7a6f;
+  --solver-tabu: #6d4aff;
+  --solver-qaoa: #c026d3;
+}
+
+.dark {
+  /* Neutral Surfaces (Dark Lab) */
+  --bg-page: #0b1015;
+  --bg-surface: #111820;
+  --bg-subtle: #18222d;
+  --bg-elevated: #151e28;
+  --dot-grid: rgba(236, 243, 249, 0.08);
+
+  /* Neutral Borders */
+  --border-subtle: #222f3e;
+  --border-strong: #33465b;
+
+  /* Ink Hierarchy */
+  --ink-primary: #ecf3f9;
+  --ink-secondary: #a1b1c4;
+  --ink-muted: #6e8196;
+
+  /* Brand & Domain Semantic Tokens */
+  --accent-brand: #2dd4bf;
+  --accent-brand-soft: rgba(45, 212, 191, 0.15);
+  --accent-brand-border: rgba(45, 212, 191, 0.4);
+
+  --qubo-positive: #fb7185;
+  --qubo-positive-soft: rgba(251, 113, 133, 0.16);
+  --qubo-positive-border: rgba(251, 113, 133, 0.42);
+
+  --qubo-negative: #38bdf8;
+  --qubo-negative-soft: rgba(56, 189, 248, 0.16);
+  --qubo-negative-border: rgba(56, 189, 248, 0.42);
+
+  --noise-accent: #fbbf24;
+  --noise-soft: rgba(251, 191, 36, 0.16);
+  --noise-border: rgba(251, 191, 36, 0.42);
+
+  --optimal-accent: #4ade80;
+  --optimal-soft: rgba(74, 222, 128, 0.15);
+  --optimal-border: rgba(74, 222, 128, 0.4);
+
+  /* Solver Series Accents */
+  --solver-bf: #e2e8f0;
+  --solver-sa: #2dd4bf;
+  --solver-tabu: #a78bfa;
+  --solver-qaoa: #e879f9;
+}
+
+@theme inline {
+  --color-page: var(--bg-page);
+  --color-surface: var(--bg-surface);
+  --color-subtle: var(--bg-subtle);
+  --color-elevated: var(--bg-elevated);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+
+  --color-ink: var(--ink-primary);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted: var(--ink-muted);
+
+  --color-brand: var(--accent-brand);
+  --color-brand-soft: var(--accent-brand-soft);
+  --color-brand-border: var(--accent-brand-border);
+
+  --color-qubo-pos: var(--qubo-positive);
+  --color-qubo-pos-soft: var(--qubo-positive-soft);
+  --color-qubo-pos-border: var(--qubo-positive-border);
+
+  --color-qubo-neg: var(--qubo-negative);
+  --color-qubo-neg-soft: var(--qubo-negative-soft);
+  --color-qubo-neg-border: var(--qubo-negative-border);
+
+  --color-noise: var(--noise-accent);
+  --color-noise-soft: var(--noise-soft);
+  --color-noise-border: var(--noise-border);
+
+  --color-optimal: var(--optimal-accent);
+  --color-optimal-soft: var(--optimal-soft);
+  --color-optimal-border: var(--optimal-border);
+
+  --color-solver-bf: var(--solver-bf);
+  --color-solver-sa: var(--solver-sa);
+  --color-solver-tabu: var(--solver-tabu);
+  --color-solver-qaoa: var(--solver-qaoa);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+@layer base {
+  html {
+    background-color: var(--bg-page);
+    color: var(--ink-primary);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100svh;
+    background-color: var(--bg-page);
+    color: var(--ink-primary);
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    color: var(--ink-primary);
+    letter-spacing: -0.025em;
+  }
+
+  code,
+  pre,
+  kbd {
+    font-family: var(--font-mono);
+  }
+}
+
+.article-prose {
+  font-family: var(--font-body);
+  font-size: var(--body-size);
+  line-height: var(--body-leading);
+  color: var(--ink-secondary);
+}
+
+.figure-grid {
+  background-image: radial-gradient(var(--dot-grid) 1.25px, transparent 1.25px);
+  background-size: 18px 18px;
+}
+
+.katex-display {
+  margin: 0.75rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.25rem;
+}
+
+/* Range slider styling aligned with Quantum Teal tokens */
+input[type="range"].lab-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--border-subtle);
+  outline: none;
+}
+
+input[type="range"].lab-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--accent-brand);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+input[type="range"].lab-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+}
+
+input[type="range"].lab-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--accent-brand);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
