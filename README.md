@@ -78,36 +78,25 @@ When the noise level $e$ is sufficiently bounded, the global minimum of this ene
 ## System Architecture & Tech Stack
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                       Frontend (React)                      │
-│   - Parameter configuration panel (n, m, q, noise e)        │
-│   - Interactive QUBO matrix visualization (Plotly Heatmap)  │
-│   - Solver execution and real-time result comparison        │
-│   - Performance analytics (timing, success rates)           │
-└──────────────────────────────▲──────────────────────────────┘
-                               │ REST API / JSON
-┌──────────────────────────────▼──────────────────────────────┐
-│                    Backend (FastAPI / Python)               │
-│   ┌─────────────────────────────────────────────────────┐   │
-│   │ LWE Generator & Instance Modeling                   │   │
-│   └──────────────────────────┬──────────────────────────┘   │
-│   ┌──────────────────────────▼──────────────────────────┐   │
-│   │ LWE -> QUBO Matrix Transformation Engine            │   │
-│   └──────────────────────────┬──────────────────────────┘   │
-│   ┌──────────────────────────▼──────────────────────────┐   │
-│   │ Unified Solver Layer (Brute Force, SA, Tabu, QAOA)  │   │
-│   └──────────────────────────┬──────────────────────────┘   │
-│   ┌──────────────────────────▼──────────────────────────┐   │
-│   │ Benchmark Suite, Metric Collection & Export         │   │
-│   └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────┐
+│                Static Web App (React/TypeScript)           │
+│ Interactive article, playground, and visualizations       │
+│ Browser solvers run in Web Workers; no runtime API needed │
+└──────────────────────────────┬────────────────────────────┘
+                               │ imports core + optional JSON
+┌──────────────────────────────▼────────────────────────────┐
+│          TypeScript Core + Optional Static Data            │
+│ LWE → QUBO, solvers, seeded traces                         │
+└───────────────────────────────────────────────────────────┘
+
+Python library: manual experiments and optional reference solvers/QAOA
 ```
 
 ### Technology Stack
-- **Backend**: Python 3.10+, [FastAPI](https://fastapi.tiangolo.com/), NumPy, SciPy, Pydantic
-- **QUBO & Solvers**: [dwave-samplers](https://github.com/dwavesystems/dwave-samplers) (`SimulatedAnnealingSampler`, `TabuSampler`), custom vectorised Brute Force solver, optional Qiskit / PennyLane for QAOA
-- **Frontend**: React (TypeScript / JavaScript), [Plotly.js](https://plotly.com/javascript/) / `react-plotly.js`, Tailwind CSS
-- **Deployment & Orchestration**: Docker, Docker Compose
+- **Python library**: Python 3.10+, NumPy, [dwave-samplers](https://github.com/dwavesystems/dwave-samplers); used locally, not as a web server
+- **Interactive core**: TypeScript, used by the browser
+- **Frontend**: Vite + React/TypeScript, Web Workers, SVG visualizations
+- **Deployment**: Static hosting (for example, GitHub Pages); no runtime backend or Docker required
 
 ---
 
@@ -118,10 +107,10 @@ When the noise level $e$ is sufficiently bounded, the global minimum of this ene
    - Serves as the authoritative ground truth for small instances ($n \le 16$) to verify global optimality.
 2. **Simulated Annealing (SA)**:
    - Probabilistic heuristic based on simulated cooling of a physical system.
-   - Implemented using the `dwave-samplers` library.
+   - The Python package provides a `dwave-samplers` reference wrapper; the TypeScript core has a deterministic implementation for the browser and benchmarks.
 3. **Tabu Search**:
    - Metaheuristic leveraging a short-term tabu list to prevent cycling and escape local energy minima.
-   - Implemented using `dwave-samplers`.
+   - The Python package provides a `dwave-samplers` reference wrapper; the TypeScript core implements tabu search locally.
 4. **QAOA (Quantum Approximate Optimization Algorithm - Optional)**:
    - Hybrid quantum-classical variational algorithm run on a quantum state simulator for small problem dimensions.
 
@@ -151,15 +140,13 @@ lwe-qubo-attack-lab/
 ├── tests/                    # Library tests
 ├── pyproject.toml            # Package metadata and dependencies
 ├── requirements.txt          # Runtime dependencies
-├── frontend/                 # React web application
-│   ├── src/
-│   │   ├── components/       # UI components (Heatmap, Controls, MetricsTable, Charts)
-│   │   ├── services/         # API client bindings
-│   │   └── App.jsx / .tsx
-│   ├── Dockerfile
-│   └── package.json
+├── packages/
+│   └── core/                 # LWE, QUBO, solvers, seeded RNG, trace types
+├── frontend/                 # Static React article and solver playground
 └── docs/                     # Design documentation, reports, and presentation slides
 ```
+
+There is no backend or benchmark CLI in the repository. The Python package remains a local library for manual experiments and reference runs; it does not serve requests. The web application is static and uses the TypeScript core directly. Optional precomputed research charts can be supplied as static JSON.
 
 ---
 
@@ -169,7 +156,7 @@ lwe-qubo-attack-lab/
 | :--- | :--- | :--- |
 | **Patryk Kurek** | Team Lead, Cryptography & QUBO Model | Contact with instructor, LWE instance generator, QUBO formulation and mathematical validation |
 | **Piotr Ziobrowski** | Optimization Algorithms | Solver implementation & integration (`dwave-samplers`, Brute Force, QAOA), benchmark scripts |
-| **Kacper Sikora** | Web Application | REST API architecture, React user interface, QUBO heatmap visualization, Docker deployment |
+| **Kacper Sikora** | Web Application | React/TypeScript interactive article, visualizations, Web Worker integration, static deployment |
 | **Wojciech Marcela** | Testing, Analytics & Documentation | Unit & integration tests, experimental data analysis, final report, presentation coordination |
 
 ---
@@ -190,9 +177,9 @@ flowchart TD
 ```
 
 - **Stage 1 (until Nov 3)**: Team constitution, role division, GitHub repo setup, preliminary literature survey on lattice-to-QUBO methods.
-- **Stage 2 (Nov 4 – Nov 24)**: Conception and prototype: derivation of QUBO formulation, LWE generator prototype, initial Brute Force & Simulated Annealing prototypes, FastAPI & React skeletons.
-- **Stage 3 (Nov 25 – Dec 7/8)**: Demonstrator version (in-person check-in): parameterized generator $(n, m, q, e)$, QUBO matrix export, Tabu Search integration, unified solver interface, UI parameter form and Plotly heatmap, unit tests.
-- **Stage 4 (Dec 9 – Jan 5)**: Full functionality & results: QUBO size analysis, comprehensive experiments (accuracy and timing vs $n$ and noise), comparison charts in UI, Docker containerization, draft report. *(Dec 22 – Jan 1: holiday buffer)*.
+- **Stage 2 (Nov 4 – Nov 24)**: Conception and prototype: derivation of QUBO formulation, LWE generator prototype, initial Brute Force and Simulated Annealing prototypes, and frontend scaffold.
+- **Stage 3 (Nov 25 – Dec 7/8)**: Demonstrator version (in-person check-in): parameterized generator $(n, m, q, e)$, QUBO matrix export, Tabu Search integration, unified solver interface, basic UI, and unit tests.
+- **Stage 4 (Dec 9 – Jan 5)**: Full functionality & results: QUBO size analysis, comprehensive experiments (accuracy and timing vs $n$ and noise), interactive article, and static visual analytics. *(Dec 22 – Jan 1: holiday buffer)*.
 - **Stage 5 (Jan 6 – Jan 26)**: Final delivery: consultation adjustments, final report, backup demo recording, online dry run (Jan 22–23), final presentation (Jan 26).
 
 ---
@@ -233,15 +220,21 @@ result = SimulatedAnnealingSolver(num_sweeps=1000).solve(
 )
 ```
 
-#### Frontend:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-The React web application will be accessible at: `http://localhost:5173` (or `http://localhost:3000`)
+#### TypeScript workspaces:
 
-### Running with Docker Compose:
+Install dependencies and run the core tests, type checks, and production build:
+
 ```bash
-docker-compose up --build
+npm install
+npm test
+npm run check
+npm run build
 ```
+
+Start the static React application with:
+
+```bash
+npm run dev --workspace lwe-qubo-frontend
+```
+
+For manual experiments and Python reference solvers, use the Python library instructions above. The TypeScript generator uses its own deterministic seeded PRNG; a given seed is repeatable within TypeScript, but does not reproduce NumPy's random sequence.
