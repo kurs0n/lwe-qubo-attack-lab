@@ -142,7 +142,7 @@ lwe-qubo-attack-lab/
 ├── requirements.txt          # Runtime dependencies
 ├── packages/
 │   └── core/                 # LWE, QUBO, solvers, seeded RNG, trace types
-├── apps/web/                 # Static React article and solver playground
+├── frontend/                 # Static React article and solver playground
 └── docs/                     # Design documentation, reports, and presentation slides
 ```
 
@@ -234,7 +234,7 @@ npm run build
 Start the static React application with:
 
 ```bash
-npm run dev --workspace @lwe-qubo/web
+npm run dev --workspace lwe-qubo-frontend
 ```
 
 For manual experiments and Python reference solvers, use the Python library instructions above. The TypeScript generator uses its own deterministic seeded PRNG; a given seed is repeatable within TypeScript, but does not reproduce NumPy's random sequence.

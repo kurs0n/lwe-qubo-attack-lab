@@ -80,7 +80,7 @@ The repository contains a Python library and a TypeScript workspace. There is no
 
 ```
 packages/core/   # Pure TypeScript: browser LWE, QUBO, solvers, seeded RNG, trace types
-apps/web/        # Vite + React: static interactive article and playground
+frontend/        # Vite + React: static interactive article and playground
 ```
 
 Run browser solvers in Web Workers. Use the existing Python library for manual experiments and `dwave-samplers` reference runs; the frontend does not need a benchmark CLI or request-serving backend. If the article later needs precomputed research charts, generate and commit their JSON from Python. Do not add FastAPI, REST endpoints, or backend deployment infrastructure unless requirements change.
@@ -122,7 +122,7 @@ The frontend's goal is an explorable, interactive article that explains the LWE-
 
 ```text
 packages/core/   # Pure TypeScript: LWE generator, QUBO reduction, solvers, seeded RNG, trace types
-apps/web/        # Vite + React: article, visualizations, and interactive playground
+frontend/        # Vite + React: article, visualizations, and interactive playground
 ```
 
 The TypeScript core and web application are implemented. The Python package is retained as a separate local library and reference implementation; it is not a web service. TypeScript is the source used by the browser, while manual experiments use Python. When changing shared mathematics, keep both implementations aligned with tests or shared fixtures, and do not silently remove the Python package. The small problem sizes ($n \le 16$) are suitable for TypeScript; avoid introducing Rust/WASM without measured evidence that it is needed.
