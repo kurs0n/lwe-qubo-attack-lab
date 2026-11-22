@@ -102,12 +102,14 @@ Python library: manual experiments and optional reference solvers/QAOA
 
 ## Optimization Solvers
 
-The TypeScript core currently provides only Brute Force. The Python package separately provides Simulated Annealing and Tabu Search.
+The TypeScript core provides Brute Force and Simulated Annealing. The Python package provides Simulated Annealing and Tabu Search via `dwave-samplers`.
 
 1. **Brute Force (Exhaustive Search)**:
    - Evaluates all $2^n$ combinations and serves as the authoritative ground truth for small instances ($n \le 16$).
-2. **Simulated Annealing (SA, Python)**:
-   - Probabilistic heuristic based on simulated cooling of a physical system, implemented via `dwave-samplers`.
+2. **Simulated Annealing (SA, TypeScript + Python)**:
+   - Probabilistic heuristic based on simulated cooling of a physical system. The TypeScript core (`packages/core/src/solvers/simulated-annealing.ts`) runs it in the browser with one basic setup: each sweep proposes flipping every bit in order, flips are accepted by the Metropolis rule (always downhill, uphill with probability $e^{-\beta \Delta E}$), and $\beta$ grows geometrically from a hot to a cold value derived from the QUBO's energy scale. Several independent reads (restarts) can be run.
+   - `SimulatedAnnealingSolver.solve()` returns the best *final* state across reads, plus per-read samples with the best state visited. `annealingMoves()` lazily yields every proposed flip of one read for step-by-step explanations.
+   - Runs are reproducible for a given seed.
 3. **Tabu Search (Python)**:
    - Metaheuristic leveraging a short-term tabu list to prevent cycling and escape local energy minima, implemented via `dwave-samplers`.
 4. **QAOA (Quantum Approximate Optimization Algorithm - Optional)**:
@@ -153,10 +155,12 @@ There is no backend or benchmark CLI in the repository. The Python package remai
 
 | Member | Role | Primary Responsibilities |
 | :--- | :--- | :--- |
-| **Patryk Kurek** | Team Lead, Cryptography & QUBO Model | Contact with instructor, LWE instance generator, QUBO formulation and mathematical validation |
-| **Piotr Ziobrowski** | Optimization Algorithms | Solver implementation & integration (`dwave-samplers`, Brute Force, QAOA), benchmark scripts |
-| **Kacper Sikora** | Web Application | React/TypeScript interactive article, visualizations, Web Worker integration, static deployment |
-| **Wojciech Marcela** | Testing, Analytics & Documentation | Unit & integration tests, experimental data analysis, final report, presentation coordination |
+| **Patryk Kurek** | Team Lead, Cryptography, QUBO Model & Brute Force | Contact with instructor, LWE instance generator, LWE → QUBO formulation and mathematical validation, Brute Force ground-truth solver |
+| **Piotr Ziobrowski** | Tabu Search & Benchmarks | Tabu Search solver (`dwave-samplers`), unified solver interface, benchmark scripts, optional QAOA |
+| **Kacper Sikora** | Integration & Web Application | Wiring the core library and solvers into the app: React/TypeScript interactive article, visualizations, Web Worker integration, static deployment |
+| **Wojciech Marcela** | Simulated Annealing, Testing & Analytics | Simulated Annealing solver (TypeScript core and Python reference), unit & integration tests, experimental data analysis, presentation coordination |
+
+The final report is written jointly: each member authors the chapter covering their own area.
 
 ---
 

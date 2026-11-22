@@ -1,10 +1,25 @@
 import { QUBO } from "../qubo/converter";
 import type {
+  SolverEvent,
   SolverProgressContext,
   SolverResult,
   SolverStep,
 } from "./types";
 import { SolverCancelledError } from "./types";
+
+export function validateBinaryVector(
+  vector: readonly number[],
+  size: number,
+  name: string,
+): readonly number[] {
+  if (!Array.isArray(vector) || vector.length !== size) {
+    throw new RangeError(`${name} must have length ${size}`);
+  }
+  if (vector.some((bit) => bit !== 0 && bit !== 1)) {
+    throw new TypeError(`${name} must contain only 0 or 1`);
+  }
+  return vector;
+}
 
 export function validateTrueSecret(
   qubo: QUBO,
@@ -13,19 +28,23 @@ export function validateTrueSecret(
   if (secret === undefined) {
     return null;
   }
-  if (!Array.isArray(secret) || secret.length !== qubo.size) {
-    throw new RangeError(`trueSecret must have length ${qubo.size}`);
-  }
-  if (secret.some((bit) => bit !== 0 && bit !== 1)) {
-    throw new TypeError("trueSecret must contain only 0 or 1");
-  }
-  return secret;
+  return validateBinaryVector(secret, qubo.size, "trueSecret");
 }
 
 export function validatePositiveInteger(value: number, name: string): void {
   if (!Number.isSafeInteger(value) || value < 1) {
     throw new RangeError(`${name} must be a positive integer`);
   }
+}
+
+export function hammingDistance(
+  left: readonly number[],
+  right: readonly number[],
+): number {
+  return left.reduce(
+    (distance, bit, index) => distance + (bit === (right[index] ?? 0) ? 0 : 1),
+    0,
+  );
 }
 
 export function checkCancellation(
@@ -60,36 +79,37 @@ export function createProgressContext(
   };
 }
 
+/** Events that are always kept in a trace, regardless of downsampling. */
+export type TraceEvent = Exclude<SolverEvent, "sample">;
+
+/**
+ * Collects a downsampled solver trace.
+ *
+ * Regular steps are kept every `stride` iterations. Steps recorded with an
+ * explicit event (best-so-far improvements, read boundaries, final state) are
+ * always kept. If the result still exceeds `limit`, regular samples are thinned
+ * evenly so the trace fits while every meaningful event survives.
+ */
 export class TraceCollector {
   private readonly steps: SolverStep[] = [];
   private readonly stride: number;
 
   constructor(
     private readonly total: number,
-    limit: number,
+    private readonly limit: number,
     private readonly onStep?: (step: SolverStep) => void,
   ) {
     validatePositiveInteger(limit, "traceLimit");
     this.stride = Math.max(1, Math.ceil(total / Math.max(1, limit - 1)));
   }
 
-  record(
-    step: Omit<SolverStep, "event">,
-    important = false,
-    final = false,
-  ): void {
-    if (!important && !final && step.iter % this.stride !== 0) {
+  record(step: Omit<SolverStep, "event">, event?: TraceEvent): void {
+    if (event === undefined && step.iter % this.stride !== 0) {
       return;
     }
     const fullStep: SolverStep = {
       ...step,
-      event: final
-        ? "final"
-        : step.iter === 0
-          ? "initial"
-          : important
-            ? "best"
-            : "sample",
+      event: event ?? (step.iter === 0 ? "initial" : "sample"),
       state: Object.freeze([...step.state]),
       tabu: step.tabu === null ? null : Object.freeze([...step.tabu]),
     };
@@ -103,7 +123,24 @@ export class TraceCollector {
   }
 
   snapshot(): readonly SolverStep[] {
-    return Object.freeze([...this.steps]);
+    if (this.steps.length <= this.limit) {
+      return Object.freeze([...this.steps]);
+    }
+    const samples = this.steps.filter((step) => step.event === "sample");
+    const budget = Math.max(
+      0,
+      this.limit - (this.steps.length - samples.length),
+    );
+    const keep = new Set<SolverStep>();
+    for (let index = 0; index < budget; index += 1) {
+      const sample = samples[Math.floor((index * samples.length) / budget)];
+      if (sample !== undefined) {
+        keep.add(sample);
+      }
+    }
+    return Object.freeze(
+      this.steps.filter((step) => step.event !== "sample" || keep.has(step)),
+    );
   }
 }
 
@@ -116,20 +153,14 @@ export function buildSolverResult(
   trace: TraceCollector,
 ): SolverResult {
   const frozenSolution = Object.freeze([...solution]);
-  const hammingDistance =
-    trueSecret === null
-      ? null
-      : frozenSolution.reduce(
-          (distance, bit, index) =>
-            distance + (bit === (trueSecret[index] ?? 0) ? 0 : 1),
-          0,
-        );
+  const distance =
+    trueSecret === null ? null : hammingDistance(frozenSolution, trueSecret);
   return Object.freeze({
     solution: frozenSolution,
     energy: qubo.energy(frozenSolution),
     executionTimeMs,
-    isCorrect: hammingDistance === null ? null : hammingDistance === 0,
-    hammingDistance,
+    isCorrect: distance === null ? null : distance === 0,
+    hammingDistance: distance,
     extraInfo: Object.freeze({ ...extraInfo }),
     trace: trace.snapshot(),
   });

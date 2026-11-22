@@ -12,10 +12,10 @@ The purpose of this repository is to implement, evaluate, and benchmark an attac
 - **Observation Equation:** $b = As + e$, where $A \in \mathbb{Z}^{m \times n}$, $e \in \mathbb{Z}^m$ (bounded error/noise), and $b \in \mathbb{Z}^m$ ($m \ge n$).
 - **Objective:** Recover secret $s$ from known public data $(A, b)$ by minimizing $\|As - b\|^2$.
 - **Solvers:**
-  1. *Brute Force* (exhaustive $2^n$ search; serves as the ground-truth baseline).
-  2. *Simulated Annealing* (`dwave-samplers`).
-  3. *Tabu Search* (`dwave-samplers`).
-  4. *QAOA* (optional quantum-simulated optimization via Qiskit or PennyLane for small $n$).
+  1. _Brute Force_ (exhaustive $2^n$ search; serves as the ground-truth baseline).
+  2. _Simulated Annealing_ (`dwave-samplers`).
+  3. _Tabu Search_ (`dwave-samplers`).
+  4. _QAOA_ (optional quantum-simulated optimization via Qiskit or PennyLane for small $n$).
 
 ---
 
@@ -23,12 +23,14 @@ The purpose of this repository is to implement, evaluate, and benchmark an attac
 
 When taking on tasks, agents must align their scope, conventions, and style with the corresponding area owner:
 
-| Area / Persona | Scope & Responsibility | Operational Directives for Agents |
-|---|---|---|
-| **Cryptography & QUBO Model** *(Patryk Kurek)* | Parameterized LWE generator $(n, m, q, e)$, mathematical QUBO reduction, matrix exporter, energy landscape validation | Ensure rigorous mathematical definitions, correct noise distribution handling, check that zero-noise instances yield global minimum energy matching the ground-truth key $s$, and verify upper-triangular vs symmetric matrix consistency. |
-| **Optimization Solvers** *(Piotr Ziobrowski)* | Solver implementations, unified `BaseSolver` abstraction, benchmark scripts, timing profilers | Ensure reproducibility by accepting explicit random `seed` parameters. Profile execution using high-resolution monotonic clocks (`time.perf_counter()`). Maintain compatibility with `dimod.BinaryQuadraticModel` and `dwave-samplers`. |
-| **Web Application & Interactive Article** *(Kacper Sikora)* | React/TypeScript article, interactive visualizations, Web Worker integration, static deployment | Keep the UI modular and responsive. Run long computations off the main thread and provide progress and cancellation feedback. Do not add a runtime API/backend without a concrete requirement. |
-| **Testing, Quality & Docs** *(Wojciech Marcela)* | Unit & integration tests (`pytest`), statistical analysis, experimental notebooks/scripts, final reporting | Maintain robust test coverage (edge cases $n=4$, $e=0$, invalid matrix dimensions). Verify that heuristic energies closely track Brute Force results. Keep documentation synchronized with codebase changes. |
+| Area / Persona                                                           | Scope & Responsibility                                                                                                                                                       | Operational Directives for Agents                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cryptography, QUBO Model & Brute Force** _(Patryk Kurek)_              | Team lead; parameterized LWE generator $(n, m, q, e)$, mathematical LWE $\to$ QUBO reduction, matrix exporter, energy landscape validation, Brute Force ground-truth solver  | Ensure rigorous mathematical definitions, correct noise distribution handling, check that zero-noise instances yield global minimum energy matching the ground-truth key $s$, and verify upper-triangular vs symmetric matrix consistency. Keep Brute Force exact and authoritative for $n \le 16$, since heuristics are validated against it. |
+| **Tabu Search & Benchmarks** _(Piotr Ziobrowski)_                        | Tabu Search solver, unified `BaseSolver` abstraction, benchmark scripts, timing profilers, optional QAOA                                                                     | Ensure reproducibility by accepting explicit random `seed` parameters. Profile execution using high-resolution monotonic clocks (`time.perf_counter()`). Maintain compatibility with `dimod.BinaryQuadraticModel` and `dwave-samplers`.                                                                                                        |
+| **Integration, Web Application & Interactive Article** _(Kacper Sikora)_ | Wiring the core library and solvers into the app: React/TypeScript article, interactive visualizations, Web Worker integration, static deployment                            | Keep the UI modular and responsive. Run long computations off the main thread and provide progress and cancellation feedback. Do not add a runtime API/backend without a concrete requirement.                                                                                                                                                 |
+| **Simulated Annealing, Testing & Analysis** _(Wojciech Marcela)_         | Simulated Annealing solver (TypeScript core and Python reference), unit & integration tests, statistical analysis, experimental notebooks/scripts, presentation coordination | Keep SA seeded and deterministic for a given seed. Maintain robust test coverage (edge cases $n=4$, $e=0$, invalid matrix dimensions). Verify that heuristic energies closely track Brute Force results. Keep documentation synchronized with codebase changes.          |
+
+**Final report:** written jointly; each member authors the chapter covering their own area.
 
 ---
 
@@ -37,6 +39,7 @@ When taking on tasks, agents must align their scope, conventions, and style with
 Every code module converting LWE instances into QUBO matrices must strictly follow this mathematical transformation:
 
 ### 3.1 Derivation
+
 Given public matrix $A \in \mathbb{R}^{m \times n}$ and observation vector $b \in \mathbb{R}^m$, the least-squares optimization is:
 $$\min_{s \in \{0, 1\}^n} \|As - b\|^2$$
 
@@ -47,9 +50,11 @@ Because $s_i \in \{0, 1\}$ is binary, $s_i^2 = s_i$. The linear term $-2 (A^T b)
 $$s^T (A^T A) s - 2 (A^T b)^T s = \sum_{i=1}^n \left( (A^T A)_{ii} - 2(A^T b)_i \right) s_i + \sum_{i \neq j} (A^T A)_{ij} s_i s_j$$
 
 ### 3.2 Canonical Matrix Representations
+
 Agents must support two output representations:
 
 1. **Upper-Triangular Matrix (D-Wave standard)**:
+
    - For $i = j$:
      $$Q_{ii} = (A^T A)_{ii} - 2(A^T b)_i$$
    - For $i < j$:
@@ -64,6 +69,7 @@ Agents must support two output representations:
      $$Q_{ij} = (A^T A)_{ij}$$
 
 ### 3.3 Energy Offset & Verification Condition
+
 - **Energy Offset:** $C = b^T b = \|b\|^2$.
 - The total reconstructed energy for a candidate vector $\hat{s}$ is:
   $$E(\hat{s}) = \hat{s}^T Q \hat{s} + C = \|A\hat{s} - b\|^2$$
@@ -79,15 +85,16 @@ Agents must support two output representations:
 The repository contains a Python library and a TypeScript workspace. There is no web backend. The static web application runs the interactive core in the browser:
 
 ```
-packages/core/   # Pure TypeScript: browser LWE, QUBO, brute-force solver, seeded RNG, trace types
+packages/core/   # Pure TypeScript: browser LWE, QUBO, brute-force and simulated-annealing solvers, seeded RNG, trace types
 frontend/        # Vite + React: static interactive article and playground
 ```
 
 Run browser solvers in Web Workers. Use the existing Python library for manual experiments and `dwave-samplers` reference runs; the frontend does not need a benchmark CLI or request-serving backend. If the article later needs precomputed research charts, generate and commit their JSON from Python. Do not add FastAPI, REST endpoints, or backend deployment infrastructure unless requirements change.
 
-The TypeScript core currently implements only brute-force search. Simulated annealing and tabu search remain in the Python package.
+The TypeScript core implements brute-force search and simulated annealing. Tabu search remains in the Python package.
 
 ### 4.2 Standard Solver Interface
+
 Python solver implementations must inherit from `BaseSolver` and return a standard `SolverResult`. The TypeScript core uses its own typed result and trace contracts; keep those pure and independent from Python classes:
 
 ```python
@@ -109,7 +116,7 @@ class BaseSolver(ABC):
     def solve(self, Q: np.ndarray, offset: float = 0.0, **kwargs) -> SolverResult:
         """
         Solves min s^T Q s + offset for s in {0,1}^n.
-        
+
         Args:
             Q: Square QUBO matrix (upper-triangular or symmetric).
             offset: Scalar constant energy offset (b^T b).
@@ -146,6 +153,7 @@ The TypeScript core and web application are implemented. The Python package is r
 ## 5. Engineering Quality & Testing Requirements
 
 Before concluding any development turn, AI agents must ensure:
+
 1. **Typing & Linting:**
    - Strict Python 3.10+ typing annotations (`mypy` compatible).
    - TypeScript workspaces must pass `npm run check`; keep core, benchmark code, and browser code type-safe.
