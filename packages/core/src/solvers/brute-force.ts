@@ -69,9 +69,15 @@ export class BruteForceSolver {
           temperature: null,
           accepted: null,
           tabu: null,
+          read: null,
         },
-        improved,
-        candidate === total - 1,
+        candidate === total - 1
+          ? "final"
+          : candidate === 0
+            ? "initial"
+            : improved
+              ? "best"
+              : undefined,
       );
       lastEnergy = energy;
       if ((candidate + 1) % yieldEvery === 0 || candidate === total - 1) {

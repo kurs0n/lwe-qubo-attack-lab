@@ -1,4 +1,19 @@
-export type SolverEvent = "initial" | "sample" | "best" | "final";
+/**
+ * Why a step was recorded in a solver trace.
+ *
+ * - `initial`: first state of the whole run.
+ * - `sample`: regular, downsampled snapshot.
+ * - `best`: a new best-so-far energy for the whole run.
+ * - `read-start` / `read-end`: boundaries of one independent read (restart).
+ * - `final`: last recorded step of the run.
+ */
+export type SolverEvent =
+  | "initial"
+  | "sample"
+  | "best"
+  | "read-start"
+  | "read-end"
+  | "final";
 
 export interface SolverStep {
   readonly iter: number;
@@ -10,6 +25,8 @@ export interface SolverStep {
   readonly temperature: number | null;
   readonly accepted: boolean | null;
   readonly tabu: readonly number[] | null;
+  /** Index of the independent read (restart) for multi-read solvers. */
+  readonly read: number | null;
   readonly event: SolverEvent;
 }
 
