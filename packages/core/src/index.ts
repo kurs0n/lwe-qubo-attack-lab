@@ -28,6 +28,13 @@ export type {
   SimulatedAnnealingParameters,
   SimulatedAnnealingResult,
 } from "./solvers/simulated-annealing";
+export { TabuSearchSolver } from "./solvers/tabu-search";
+export type {
+  TabuSample,
+  TabuSearchOptions,
+  TabuSearchParameters,
+  TabuSearchResult,
+} from "./solvers/tabu-search";
 export { SolverCancelledError } from "./solvers/types";
 export type {
   SolverEvent,
